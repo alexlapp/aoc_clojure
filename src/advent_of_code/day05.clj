@@ -45,7 +45,7 @@
 
 (defn build-rules
   [rule-str]
-  (let [number-sets (->> sample
+  (let [number-sets (->> rule-str
                          split-blocks
                          first
                          parse-longs
@@ -57,26 +57,22 @@
 
 (defn is-valid-ordering?
   [ruleset pages]
-  (loop [to-visit pages
+  (loop [[curr-page & remaining-pages] pages
          seen-pages #{}]
-    (let [curr-page (first to-visit)
-          remaining-pages (rest to-visit)
-          valid-page (empty? (set/intersection (ruleset curr-page) seen-pages))]
-      (cond (not valid-page)
-            false
-            
-            (empty? remaining-pages)
-            true
-            
-            :else
-            (recur remaining-pages (conj seen-pages curr-page))))))
+    (cond (some #((get ruleset curr-page #{}) %) seen-pages)
+          false
+          
+          (empty? remaining-pages)
+          true
+          
+          :else
+          (recur remaining-pages (conj seen-pages curr-page)))))
 
 (defn middle
   "Gets middle element from a sequence"
   [s]
   (nth s (quot (count s) 2)))
 
-;; Does not work for input
 (defn solve-part-1
   [input]
   (let [[ruleset-str instr-str] (split-blocks input)
@@ -87,3 +83,36 @@
          (map middle)
          (reduce +))))
 
+;; ----------------------------------------
+;;   Part 2
+;; ----------------------------------------
+
+(defn insert-at [n xs x]
+  (into []
+        (concat (take n xs)
+                [x]
+                (drop n xs))))
+
+(defn reorder [rules instruction]
+  (let [add-page
+        (fn [pages page]
+          (let [deps (get rules page #{})
+                invalid-pos (first
+                             (for [n (range (count pages))
+                                   :when (contains? deps (nth pages n))]
+                               n))]
+            (if invalid-pos
+              (insert-at invalid-pos pages page)
+              (conj pages page))))]
+    (reduce add-page [] instruction)))
+
+(defn solve-part-2
+  [input]
+  (let [[ruleset-str instructions-str] (split-blocks input)
+        ruleset (build-rules ruleset-str)
+        instructions (->> instructions-str str/split-lines (map parse-longs))]
+    (->> instructions
+         (filter #(not (is-valid-ordering? ruleset %)))
+         (map (partial reorder ruleset))
+         (map middle)
+         (reduce +))))
