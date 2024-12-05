@@ -1,18 +1,6 @@
 (ns advent-of-code.day04
   (:require [clojure.string :as str]))
 
-
-(def simple "..X...
-.SAMX.
-.A..A.
-XMAS.S
-.X....")
-
-(def mine ".XMASAMX
-..M...MM
-...A.A.A
-....S..S")
-
 (def sample "MMMSXXMASM
 MSAMXMSMSA
 AMXSXMAAMM
@@ -24,7 +12,7 @@ SAXAMASAAA
 MAMMMXMMMM
 MXMXAXMASX")
 
-(def sample-simple "....XXMAS.
+(def simple-sample "....XXMAS.
 .SAMXMS...
 ...S..A...
 ..A.A.MS.X
@@ -92,10 +80,6 @@ S.S.S.S.SS
 .A.
 M.S")
 
-(def double "M.S.M..
-.A.A...
-M.S.M..")
-
 (defn positions
   [pred coll]
   (keep-indexed (fn [idx x] (when (pred x)
@@ -106,17 +90,6 @@ M.S.M..")
   [c string]
   (positions (partial = c) string))
 
-
-(let [input sample]
-  (let [search-sets (partition 3 1 (str/split-lines sample))]
-    (reduce (fn [acc search-set] 
-              (conj acc (map #(positions (partial = \A) %) search-set)))
-            []
-            search-sets)))
-
-(def sample-set '("MMMSXXMASM" "MSAMXMSMSA" "AMXSXMAAMM"))
-
-;; ERROR: Currently only checks each a for one case
 (defn check-set
   [search-set]
   (let [top-row (first search-set)
