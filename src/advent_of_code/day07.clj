@@ -46,3 +46,19 @@
       acc
       (recur (operator acc factor) remaining-factors remaining-operators))))
 
+(defn is-entry-valid? [{:keys [sum factors]}]
+  (let [operator-count (- (count factors) 1)
+        operator-combos (generate-operator-options operator-count)]
+    (some (fn [operators]
+            (= sum (combine factors operators)))
+          operator-combos)))
+
+(defn solve-part-1 [input]
+  (let [entries (parse input)]
+    (reduce (fn [sum entry]
+              (if (is-entry-valid? entry)
+                (+ sum (:sum entry))
+                sum))
+            0
+            entries)))
+
