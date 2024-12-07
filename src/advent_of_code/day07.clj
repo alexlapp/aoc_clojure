@@ -36,5 +36,13 @@
                                    (apply (fn [x & xs] {:sum x :factors (into [] xs)}))))]
     (->> input
          (str/split-lines)
-         (map parse-line))))
+         (mapv parse-line))))
+
+(defn combine [factors operators]
+  (loop [acc (first factors)
+         [factor & remaining-factors] (rest factors)
+         [operator & remaining-operators] operators]
+    (if (nil? factor)
+      acc
+      (recur (operator acc factor) remaining-factors remaining-operators))))
 
