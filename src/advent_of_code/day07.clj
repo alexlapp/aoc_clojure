@@ -37,11 +37,11 @@
          (str/split-lines)
          (mapv parse-line))))
 
-(defn combine [factors operators]
+(defn combine [factors operators max]
   (loop [acc (first factors)
          [factor & remaining-factors] (rest factors)
          [operator & remaining-operators] operators]
-    (if (nil? factor)
+    (if (or (> acc max) (nil? factor))
       acc
       (recur (operator acc factor) remaining-factors remaining-operators))))
 
@@ -49,7 +49,7 @@
   (let [operator-count (- (count factors) 1)
         operator-combos (generate-operator-options operators operator-count)]
     (some (fn [operators]
-            (= sum (combine factors operators)))
+            (= sum (combine factors operators sum)))
           operator-combos)))
 
 (defn solve-part-1 [input]
@@ -65,15 +65,6 @@
   (parse-long (str x y)))
 
 (defn solve-part-2 [input]
-  (let [entries (parse input)]
-    (reduce (fn [sum entry]
-              (if (is-entry-valid? [+ * ||] entry)
-                (+ sum (:sum entry))
-                sum))
-            0
-            entries)))
-
-(defn a-lt-solve-part-2 [input]
   (let [entries (parse input)]
     (->> entries
          (pmap (fn [entry]
