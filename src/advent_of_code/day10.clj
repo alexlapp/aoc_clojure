@@ -23,13 +23,49 @@
 
 (defn score-trailhead [grid start-cell]
   (loop [to-visit [start-cell]
-         visited #{}]
+         visited #{}
+         peaks #{}]
     (let [[visiting & to-visit] to-visit]
       (cond (nil? visiting)
-            (count (filter #(= 9 (:val %)) visited))
+            (count peaks)
 
             (contains? visited visiting)
-            (recur to-visit)
+            (recur to-visit visited peaks)
 
             :else
-            TODO: ADD REMAINING TO TO-VISIT))))
+            (let [cardinal-cells (grid/cells-cardinal grid (:pos visiting))]
+              (recur (into to-visit (filter #(= (:val %) (+ 1 (:val visiting))) cardinal-cells))
+                     (conj visited visiting)
+                     (cond-> peaks
+                       (= (:val visiting) 9) (conj visiting))))))))
+
+(defn solve-part-1 [input]
+  (let [grid (parse input)
+        starting-points (grid/find-cells grid #{0})]
+    (->> starting-points
+         (map #(score-trailhead grid %))
+         (reduce +))))
+
+;; ----------------------------------------
+;;   Part 2
+;; ----------------------------------------
+
+(defn rate-trailhead [grid start-cell]
+  (loop [to-visit [start-cell]
+         peaks []]
+    (let [[visiting & to-visit] to-visit]
+      (cond (nil? visiting)
+            (count peaks)
+
+            :else
+            (let [cardinal-cells (grid/cells-cardinal grid (:pos visiting))]
+              (recur (into to-visit (filter #(= (:val %) (+ 1 (:val visiting))) cardinal-cells))
+                     (cond-> peaks
+                       (= (:val visiting) 9) (conj visiting))))))))
+
+(defn solve-part-2 [input]
+  (let [grid (parse input)
+        starting-points (grid/find-cells grid #{0})]
+    (->> starting-points
+         (map #(rate-trailhead grid %))
+         (reduce +))))
