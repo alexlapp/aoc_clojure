@@ -28,12 +28,6 @@
          (<= x x-bound)
          (<= y y-bound))))
 
-(defn- in-bounds-normalized?
-  [grid loc]
-  (let [max-pos (xy->grid-loc grid (:bounds grid))]
-    (and (>= loc 0)
-         (<= loc max-pos))))
-
 (defn xy->grid-loc
   "Takes a grid and an x/y coordinate and returns the normalized grid location"
   [grid [x y]]
@@ -46,6 +40,12 @@
   (let [{[x-bound y-bound] :bounds} grid
         grid-width (+ 1 x-bound)]
     [(rem loc grid-width) (quot loc grid-width)]))
+
+(defn- in-bounds-normalized?
+  [grid loc]
+  (let [max-pos (xy->grid-loc grid (:bounds grid))]
+    (and (>= loc 0)
+         (<= loc max-pos))))
 
 (defn get-cell
   "Takes an [x y] pair and returns the item at that cell in the grid"
@@ -110,3 +110,19 @@
                 matches))
      []
      indexed-cells)))
+
+(defn first-cell-val [grid pred]
+  (let [{cells :grid} grid
+        indexed-cells (map-indexed vector cells)]
+    (some (fn [[loc cell]]
+            (and (pred cell)
+                 {:val cell :pos (grid-loc->xy grid loc)}))
+          indexed-cells)))
+
+(defn first-cell [grid pred]
+  (let [{cells :grid} grid
+        indexed-cells (map-indexed vector cells)]
+    (some (fn [[loc val]]
+            (let [cell {:val val :pos (grid-loc->xy grid loc)}]
+              (and (pred cell) cell)))
+          indexed-cells)))
