@@ -32,45 +32,61 @@ Prize: X=18641, Y=10279")
                             :b-btn [bx by]}))
                [])))
 
-(def initial-search-state
-  {:total-cost 0
-   :pos [0 0]
-   :a-btn 0
-   :b-btn 0})
+(defn valid-combos [{:keys [prize a-btn b-btn]}]
+  (let [[prize-x prize-y] prize
+        [a-x a-y] a-btn
+        [b-x b-y] b-btn]
+    (for [a-n (range 101)
+          b-n (range 101)
+          :when (and (= prize-x
+                        (+ (* a-n a-x)
+                           (* b-n b-x)))
+                     (= prize-y
+                        (+ (* a-n a-y)
+                           (* b-n b-y))))]
+      [a-n b-n])))
 
-(defn push-a [machine search-state]
-  (-> search-state
-      (update :a-btn inc)
-      (update :total-cost #(+ 3 %))
-      (update :pos #(move-claw % (:a-btn machine)))))
+(defn calc-price [[a b]]
+  (+ b (* 3 a)))
 
-(defn push-b [machine search-state]
-  (-> search-state
-      (update :b-btn inc)
-      (update :total-cost inc)
-      (update :pos #(move-claw % (:b-btn machine)))))
+(defn part1 [input]
+  (->> input
+       parse
+       (map valid-combos)
+       (filter not-empty)
+       (reduce (fn [total combos]
+                 (+ total
+                    (->> combos
+                         (map calc-price)
+                         sort
+                         reverse
+                         first)))
+               0)))
 
-(defn is-past-prize? [{:keys [prize]} {:keys [pos]}]
-  (or (< (first prize) (first pos))
-      (< (last prize) (last pos))))
+(defn math-it-up [{:keys [prize a-btn b-btn]}]
+  (let [[prize-x prize-y] prize
+        [a-x a-y] a-btn
+        [b-x b-y] b-btn]
+    (let [b-top (- prize-y
+                   (* (/ prize-x a-x)
+                      a-y))
+          b-bot (- b-y (* (/ b-x a-x)
+                          a-y))
+          b (/ b-top b-bot)
+          a-lft (/ prize-x a-x)
+          a-rht (* (/ b-x a-x)
+                   b)
+          a (- a-lft a-rht)]
+      (if (and (integer? a)
+               (integer? b))
+        [a b]
+        nil))))
 
-(defn is-max-presses? [{:keys [a-btn b-btn]}]
-  (or (> b-btn 100)
-      (> a-btn 100)))
-
-(defn over-prize? [{:keys [prize]} {:keys [pos]}]
-  (= prize pos))
-
-(defn expand [machine search-state]
-  (map (fn [xform] (xform machine search-state))
-       [push-a push-b]))
-
-(defn search [machine]
-  (let [xform]
-    (loop [search-state [initial-search-state]
-           seen #{}
-           winning {:total-cost (Long/MAX_VALUE)}]
-      (->> search-state
-           (mapcat expand)
-           (filter (fn [{:keys [pos a-btn b-btn]}] (contains? seen [pos a-btn b-btn])))
-           ))))
+(defn part2 [input]
+  (->> input
+       parse
+       (map #(update % :prize (partial mapv (partial + 10000000000000))))
+       (map math-it-up)
+       (filter some?)
+       (map calc-price)
+       (reduce +)))
